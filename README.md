@@ -1,31 +1,30 @@
 # Home Library Service
+## REST service: Docker
 
-## Prerequisites
-
-- Git - [Download & Install Git](https://git-scm.com/downloads).
-- Node.js - [Download & Install Node.js](https://nodejs.org/en/download/) and the npm package manager.
-
-## Downloading
+## Instruction
 
 ```
-git clone {https://github.com/Sergey-Lesnevskiy/nodejs2023Q2-service}
+git clone {https://github.com/Sergey-Lesnevskiy/nodejs2024Q1-service}
 ```
+cd nodejs2024Q1-service
 
-## Installing NPM modules
+git checkout docker
 
-```
-npm install
-```
 
 ## Running application
 
 ```
-npm start
+npm run docker
 ```
 
-After starting the app on port (4000 as default) you can open
-in your browser OpenAPI documentation by typing http://localhost:4000/doc/.
-For more information about OpenAPI/Swagger please visit https://swagger.io/.
+## Scanning
+Scan application
+```
+npm run scan:application
+```
+Scan database
+```
+npm run scan:postgres
 
 ## Testing
 
