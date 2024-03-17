@@ -3,36 +3,48 @@ import { Track } from 'src/interface/interface';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { UpdateTrackDto } from './dto/update-track.dto';
-import { mockTracks } from 'src/db/db';
+import { TrackEntity } from './entities/track.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+const tracks: Track[] = [];
 
 @Injectable()
 export class TrackService {
-  getTracks() {
-    return mockTracks;
+  constructor(
+    @InjectRepository(TrackEntity)
+    private readonly trackRepository: Repository<TrackEntity>,
+  ) {}
+  async getTracks() {
+    const tracks = await this.trackRepository.find();
+    return tracks.map((user) => user.toResponse());
   }
-  getTrackById(id: string): Track {
-    const track = mockTracks.find((track) => track.id === id);
+  async getTrackById(trackId: string) {
+    const track = await this.trackRepository.findOne({
+      where: { id: trackId },
+    });
     if (!track) {
       throw new NotFoundException('Track not found');
     }
     return track;
   }
 
-  checkTrackById(id: string): Track {
-    const track = mockTracks.find((track) => track.id === id);
+  async checkTrackById(trackId: string) {
+    const track = await this.trackRepository.findOne({
+      where: { id: trackId },
+    });
     return track;
   }
-  createTrack(createTrackDto: CreateTrackDto) {
+  async createTrack(createTrackDto: CreateTrackDto) {
     const newTrack: Track = {
       id: uuidv4(),
       ...createTrackDto,
     };
-    mockTracks.push(newTrack);
-    return newTrack;
+    tracks.push(newTrack);
+    const createdTrack = this.trackRepository.create(newTrack);
+    return (await this.trackRepository.save(createdTrack)).toResponse();
   }
-  updateTrack(UpdateTrackDto: UpdateTrackDto, id: string) {
-    const track = this.getTrackById(id);
-    const trackIdx = this.getTrackIdx(id);
+  async updateTrack(UpdateTrackDto: UpdateTrackDto, id: string) {
+    const track = await this.getTrackById(id);
     if (!track) {
       throw new NotFoundException('Track not found!');
     }
@@ -40,36 +52,47 @@ export class TrackService {
       ...track,
       ...UpdateTrackDto,
     };
-    mockTracks[trackIdx] = updateTrack;
+
+    await this.trackRepository.save(updateTrack);
     return updateTrack;
   }
 
   getTrackIdx(id: string): number {
-    const trackIdx = mockTracks.findIndex((artist) => id === artist.id);
+    const trackIdx = tracks.findIndex((artist) => id === artist.id);
     if (trackIdx != -1) {
       return trackIdx;
     }
     throw new NotFoundException('Track not found');
   }
 
-  deleteTrack(id: string) {
-    const user = this.getTrackIdx(id);
-    mockTracks.splice(user, 1);
+  async deleteTrack(id: string) {
+    const track = await this.getTrackById(id);
+    if (track) {
+      await this.trackRepository.delete(id);
+    }
   }
 
-  deleteAlbum(id) {
-    mockTracks.map((track) => {
-      if (id === track.albumId) {
-        track.albumId = null;
-      }
-    });
+  async deleteAlbum(id) {
+    const tracks = await this.getTracks();
+    await Promise.all(
+      tracks.map(async (track) => {
+        if (id === track.albumId) {
+          track.albumId = null;
+          await this.trackRepository.save(track);
+        }
+      }),
+    );
   }
 
-  deleteArtist(id) {
-    mockTracks.map((track) => {
-      if (id === track.artistId) {
-        track.artistId = null;
-      }
-    });
+  async deleteArtist(id) {
+    const tracks = await this.getTracks();
+    await Promise.all(
+      tracks.map(async (track) => {
+        if (id === track.artistId) {
+          track.artistId = null;
+          await this.trackRepository.save(track);
+        }
+      }),
+    );
   }
 }

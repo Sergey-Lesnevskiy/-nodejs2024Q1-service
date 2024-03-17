@@ -14,7 +14,7 @@ export class FavsService {
   ) {}
 
   getAll(): FavoritesResponse {
-    const favoritesResponse: FavoritesResponse = {
+    const favoritesResponse = {
       albums: [],
       artists: [],
       tracks: [],
