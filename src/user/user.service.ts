@@ -8,33 +8,43 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { mockUsers } from 'src/db/db';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from './entities/user.entity';
+
 @Injectable()
 export class UserService {
-  getUsers() {
-    return mockUsers;
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+  ) {}
+
+  async getUsers() {
+    const users = await this.userRepository.find();
+    return users.map((user) => user.toResponse());
   }
-  getUserById(id: string): User {
-    const user = mockUsers.find((user) => user.id === id);
+  async getUserById(userId: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return user;
   }
-  createUser(createUserDto: CreateUserDto) {
+  async createUser(createUserDto: CreateUserDto) {
     const newUser: User = {
       id: uuidv4(),
       version: 1,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: +Date.now(),
+      updatedAt: +Date.now(),
       ...createUserDto,
     };
-    mockUsers.push(newUser);
-    const newUserNoPassword = Object.assign({}, newUser);
-    delete newUserNoPassword.password;
-    return newUserNoPassword;
+    const createdUser = this.userRepository.create(newUser);
+    return (await this.userRepository.save(createdUser)).toResponse();
   }
-  updateUser(updateUserDto: UpdateUserDto, id: string) {
-    const user = this.getUserById(id);
+  async updateUser(updateUserDto: UpdateUserDto, id: string): Promise<any> {
+    const user = await this.getUserById(id);
     const userIdx = this.getUserIdx(id);
     if (!user) {
       throw new NotFoundException('User not found!');
@@ -49,12 +59,16 @@ export class UserService {
       ...newUserNoPassword,
       password: updateUserDto.newPassword,
       version: user.version + 1,
-      updatedAt: Date.now(),
+      updatedAt: +Date.now(),
     };
-    mockUsers[userIdx] = result;
-    const resultNoPassword = Object.assign({}, result);
-    delete resultNoPassword.password;
-    return resultNoPassword;
+    result.createdAt = +result.createdAt;
+    await this.userRepository.save(result);
+    return await this.getUserById(result.id).then((res) => {
+      delete res.password;
+      res.createdAt = +res.createdAt;
+      res.updatedAt = +res.updatedAt;
+      return res;
+    });
   }
 
   getUserIdx(id: string): number {
@@ -65,8 +79,10 @@ export class UserService {
     throw new NotFoundException('User not found');
   }
 
-  deleteUser(id: string) {
-    const user = this.getUserIdx(id);
-    mockUsers.splice(user, 1);
+  async deleteUser(id: string) {
+    const user = await this.getUserById(id);
+    if (user) {
+      await this.userRepository.delete(id);
+    }
   }
 }
