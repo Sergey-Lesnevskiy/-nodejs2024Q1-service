@@ -5,7 +5,7 @@ info:
   version: 1.0.0
 
 servers:
-  - url: /api
+  - url: /
 
 components:
   schemas:
@@ -189,7 +189,7 @@ paths:
           description: Bad request
         409:
           description: Conflict. Login already exists
-  /users:
+  /user:
     get:
       tags:
         - Users
@@ -208,7 +208,7 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
     post:
       tags:
-        - Users
+        - User
       summary: Create user
       description: Creates a new user
       requestBody:
@@ -239,7 +239,7 @@ paths:
           description: Bad request. body does not contain required fields
         401:
           $ref: '#/components/responses/UnauthorizedError'
-  /users/{userId}:
+  /user/{userId}:
     parameters:
       - name: userId
         in: path
@@ -248,7 +248,7 @@ paths:
           type: string
     get:
       tags:
-        - Users
+        - User
       summary: Get single user by id
       description: Get single user by id
       responses:
@@ -267,7 +267,7 @@ paths:
 
     put:
       tags:
-        - Users
+        - User
       summary: Update a user's password
       description: Updates a user's password by ID
       requestBody:
@@ -316,7 +316,7 @@ paths:
         401:
           $ref: '#/components/responses/UnauthorizedError'
         403:
-          description: oldPassword is wrong
+          description: oldPassowrd is wrong
         404:
           description: User not found
 
@@ -334,10 +334,10 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         404:
           description: User not found
-  /tracks:
+  /track:
     get:
       tags:
-        - Track
+        - Tracks
       summary: Get tracks list
       description: Gets all library tracks list
       responses:
@@ -388,7 +388,7 @@ paths:
           description: Bad request. body does not contain required fields
         401:
           $ref: '#/components/responses/UnauthorizedError'
-  /tracks/{id}:
+  /track/{id}:
     parameters:
       - name: id
         in: path
@@ -485,19 +485,19 @@ paths:
       description: Delete track from library
       responses:
         204:
-          description: Deleted successfully
+          description: Delelted succesfully
         400:
           description: Bad request. trackId is invalid (not uuid)
         401:
           $ref: '#/components/responses/UnauthorizedError'
         404:
           description: Track was not found.
-  /albums:
+  /album:
     get:
       tags:
-        - Album
+        - Albums
       summary: Get albums list
-      description: Gets all library albums list
+      description: Gets all library alibums list
       responses:
         200:
           description: Successful operation
@@ -535,7 +535,7 @@ paths:
                 - year
       responses:
         201:
-          description: Album is created
+          description: Almub is created
           content:
             application/json:
               schema:
@@ -544,7 +544,7 @@ paths:
           description: Bad request. body does not contain required fields
         401:
           $ref: '#/components/responses/UnauthorizedError'
-  /albums/{id}:
+  /album/{id}:
     parameters:
       - name: id
         in: path
@@ -614,17 +614,17 @@ paths:
       description: Delete album from library
       responses:
         204:
-          description: Deleted successfully
+          description: Deleted succesfully
         400:
           description: Bad request. albumId is invalid (not uuid)
         401:
           $ref: '#/components/responses/UnauthorizedError'
         404:
           description: Album was not found.
-  /artists:
+  /artist:
     get:
       tags:
-        - Artist
+        - Artists
       summary: Get all artists
       description: Gets all artists
       responses:
@@ -668,7 +668,7 @@ paths:
           description: Bad request. body does not contain required fields
         401:
           $ref: '#/components/responses/UnauthorizedError'
-  /artists/{id}:
+  /artist/{id}:
     parameters:
       - name: id
         in: path
@@ -733,7 +733,7 @@ paths:
       description: Delete artist from library
       responses:
         204:
-          description: Deleted successfully
+          description: Delelted succesfully
         400:
           description: Bad request. artistId is invalid (not uuid)
         401:
@@ -770,7 +770,7 @@ paths:
       description: Add track to the favorites
       responses:
         201:
-          description: Added successfully
+          description: Added succesfully
         400:
           description: Bad. trackId is invalid (not uuid)
         401:
@@ -784,7 +784,7 @@ paths:
       description: Delete track from favorites
       responses:
         204:
-          description: Deleted successfully
+          description: Deleted succesfully
         400:
           description: Bad. trackId is invalid (not uuid)
         401:
@@ -806,7 +806,7 @@ paths:
       description: Add album to the favorites
       responses:
         201:
-          description: Added successfully
+          description: Added succesfully
         400:
           description: Bad. albumId is invalid (not uuid)
         401:
@@ -820,7 +820,7 @@ paths:
       description: Delete album from favorites
       responses:
         204:
-          description: Deleted successfully
+          description: Deleted succesfully
         400:
           description: Bad. albumId is invalid (not uuid)
         401:
@@ -842,7 +842,7 @@ paths:
       description: Add artist to the favorites
       responses:
         201:
-          description: Added successfully
+          description: Added succesfully
         400:
           description: Bad request. artistId is invalid (not uuid)
         401:
@@ -856,7 +856,7 @@ paths:
       description: Delete artist from favorites
       responses:
         204:
-          description: Deleted successfully
+          description: Deleted succesfully
         400:
           description: Bad request. artistId is invalid (not uuid)
         401:
