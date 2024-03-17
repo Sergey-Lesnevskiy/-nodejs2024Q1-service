@@ -2,8 +2,15 @@ import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { AlbumService } from 'src/album/album.service';
 import { TrackService } from 'src/track/track.service';
 import { ArtistService } from 'src/artist/artist.service';
-import { FavoritesResponse } from 'src/interface/interface';
-import { mockFavorites } from 'src/db/db';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { FavsEntity } from './entities/favorite.entity';
+
+const db = {
+  artists: [],
+  albums: [],
+  tracks: [],
+};
 
 @Injectable()
 export class FavsService {
@@ -11,78 +18,88 @@ export class FavsService {
     private readonly artistService: ArtistService,
     private readonly trackService: TrackService,
     private readonly albumService: AlbumService,
+    @InjectRepository(FavsEntity)
+    private readonly favsRepository: Repository<FavsEntity>,
   ) {}
 
-  getAll(): FavoritesResponse {
-    const favoritesResponse = {
+  async getAll() {
+    const favoritesRepsonse = {
       albums: [],
       artists: [],
       tracks: [],
     };
-    mockFavorites.albums.forEach((album) => {
-      const findAlbum = this.albumService.checkAlbumById(album);
-      if (findAlbum) favoritesResponse.albums.push(findAlbum);
-    });
-    mockFavorites.tracks.forEach((track) => {
-      const findTrack = this.trackService.checkTrackById(track);
-      if (findTrack) favoritesResponse.tracks.push(findTrack);
-    });
-    mockFavorites.artists.forEach((artist) => {
-      const findArtist = this.artistService.checkArtistById(artist);
-      if (findArtist) favoritesResponse.artists.push(findArtist);
-    });
-    return favoritesResponse;
+    await Promise.all(
+      db.albums.map(async (album) => {
+        const findAlbum = await this.albumService.checkAlbumById(album);
+        if (findAlbum) favoritesRepsonse.albums.push(findAlbum);
+      }),
+    );
+    await Promise.all(
+      db.tracks.map(async (track) => {
+        const findTrack = await this.trackService.checkTrackById(track);
+        if (findTrack) favoritesRepsonse.tracks.push(findTrack);
+      }),
+    );
+    await Promise.all(
+      db.artists.map(async (artist) => {
+        const findArtist = await this.artistService.checkArtistById(artist);
+        if (findArtist) favoritesRepsonse.artists.push(findArtist);
+      }),
+    );
+    return await this.favsRepository.save(favoritesRepsonse);
   }
 
-  addTrackToFavs(id: string) {
-    const track = this.trackService.checkTrackById(id);
+  async addTrackToFavs(id: string) {
+    const track = await this.trackService.checkTrackById(id);
     if (track) {
-      mockFavorites.tracks.push(id);
+      db.tracks.push(id);
+      return await this.getAll();
     } else {
       throw new UnprocessableEntityException();
     }
   }
 
-  deleteTrackFromFavs(id: string) {
-    const track = this.trackService.checkTrackById(id);
+  async deleteTrackFromFavs(id: string) {
+    const track = await this.trackService.checkTrackById(id);
     if (track) {
-      mockFavorites.tracks = mockFavorites.tracks.filter((track) => {
+      db.tracks = db.tracks.filter((track) => {
         return track !== id;
       });
     } else {
       throw new UnprocessableEntityException();
     }
   }
-  addAlbumToFavs(id: string) {
-    const album = this.albumService.checkAlbumById(id);
+  async addAlbumToFavs(id: string) {
+    const album = await this.albumService.checkAlbumById(id);
     if (album) {
-      mockFavorites.albums.push(id);
+      db.albums.push(id);
     } else {
       throw new UnprocessableEntityException();
     }
   }
-  deleteAlbumFromFavs(id: string) {
-    const album = this.albumService.checkAlbumById(id);
+  async deleteAlbumFromFavs(id: string) {
+    const album = await this.albumService.checkAlbumById(id);
     if (album) {
-      mockFavorites.albums = mockFavorites.albums.filter((album) => {
+      db.albums = db.albums.filter((album) => {
         return album !== id;
       });
     } else {
       throw new UnprocessableEntityException();
     }
   }
-  addArtistToFavs(id: string) {
-    const artist = this.artistService.checkArtistById(id);
+  async addArtistToFavs(id: string) {
+    const artist = await this.artistService.checkArtistById(id);
     if (artist) {
-      mockFavorites.artists.push(id);
+      db.artists.push(id);
     } else {
       throw new UnprocessableEntityException();
     }
   }
-  deleteArtistFromFavs(id: string) {
-    const artist = this.artistService.checkArtistById(id);
+
+  async deleteArtistFromFavs(id: string) {
+    const artist = await this.artistService.checkArtistById(id);
     if (artist) {
-      mockFavorites.artists = mockFavorites.artists.filter((artist) => {
+      db.artists = db.artists.filter((artist) => {
         return artist !== id;
       });
     } else {
@@ -90,10 +107,10 @@ export class FavsService {
     }
   }
 
-  // deleteAlbum(id: string) {
-  //   const albumIdx = mockFavorites.albums.findIndex((album) => id === album.id);
-  //   if (albumIdx !== -1) {
-  //     return albumIdx;
-  //   }
-  // }
+  deleteAlbum(id) {
+    const albumIdx = db.albums.findIndex((album) => id === album.id);
+    if (albumIdx !== -1) {
+      return albumIdx;
+    }
+  }
 }
