@@ -1,0 +1,42 @@
+version: '3.0'
+services:
+  application:
+    container_name: application
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - ${PORT}:${PORT}
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - nodejs-service-network
+  postgres:
+    container_name: postgres
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    env_file:
+      - .env
+    restart: always
+    environment:
+      PG_DATA: /var/lib/postgresql/data
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    networks:
+      - nodejs-service-network
+
+networks:
+  nodejs-service-network:
+    driver: bridge
+
+volumes:
+  pg-data:
